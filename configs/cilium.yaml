@@ -1,0 +1,28 @@
+operator:
+  replicas: 1
+
+ipam:
+  mode: kubernetes
+
+kubeProxyReplacement: true
+k8sServicePort: 6443
+
+envoy:
+  enabled: true
+
+gatewayAPI:
+  enabled: true
+  hostNetwork:
+    enabled: true
+    nodes:
+      matchLabels:
+        component: gateway
+
+l7Proxy: true
+
+hubble:
+  enabled: true
+  relay:
+    enabled: true
+  ui:
+    enabled: true

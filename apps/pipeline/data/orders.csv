@@ -1,0 +1,14 @@
+order_id,ordered_at,customer_country,status,amount
+1001,2026-08-25,DE,completed,149.90
+1002,2026-08-25,FR,completed,89.50
+1003,2026-08-26,DE,cancelled,42.00
+1004,2026-08-27,NL,completed,210.25
+1005,2026-08-28,DE,completed,35.00
+1006,2026-08-29,US,refunded,499.99
+1007,2026-08-30,FR,completed,125.75
+1008,2026-08-31,US,completed,320.00
+1009,2026-09-01,NL,completed,74.25
+1010,2026-09-02,DE,completed,180.10
+1011,2026-09-03,FR,cancelled,66.60
+1012,2026-09-04,US,completed,59.95
+

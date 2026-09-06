@@ -1,0 +1,110 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pipeline-seed
+  namespace: data
+  labels:
+    app.kubernetes.io/name: demo-data-pipeline
+    app.kubernetes.io/component: seed
+spec:
+  backoffLimit: 2
+  activeDeadlineSeconds: 300
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: demo-data-pipeline
+        app.kubernetes.io/component: seed
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: pipeline
+          image: demo-data-pipeline:dev
+          imagePullPolicy: IfNotPresent
+          args:
+            - seed
+          envFrom:
+            - secretRef:
+                name: pipeline-s3
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          volumeMounts:
+            - name: temporary-data
+              mountPath: /tmp
+      volumes:
+        - name: temporary-data
+          emptyDir: {}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pipeline-transform
+  namespace: data
+  labels:
+    app.kubernetes.io/name: demo-data-pipeline
+    app.kubernetes.io/component: transform
+spec:
+  backoffLimit: 2
+  activeDeadlineSeconds: 300
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: demo-data-pipeline
+        app.kubernetes.io/component: transform
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: pipeline
+          image: demo-data-pipeline:dev
+          imagePullPolicy: IfNotPresent
+          args:
+            - transform
+          envFrom:
+            - secretRef:
+                name: pipeline-s3
+          env:
+            - name: INPUT_WAIT_SECONDS
+              value: "120"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+          volumeMounts:
+            - name: temporary-data
+              mountPath: /tmp
+      volumes:
+        - name: temporary-data
+          emptyDir: {}

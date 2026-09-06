@@ -1,0 +1,94 @@
+executor: LocalExecutor
+
+allowPodLaunching: true
+
+config:
+  core:
+    load_examples: "False"
+    dags_are_paused_at_creation: "False"
+
+redis:
+  enabled: false
+
+flower:
+  enabled: false
+
+statsd:
+  enabled: false
+
+triggerer:
+  enabled: false
+
+pgbouncer:
+  enabled: false
+
+enableServiceLinks: false
+
+dags:
+  persistence:
+    enabled: false
+  gitSync:
+    enabled: false
+    recommendedProbeSetting: true
+
+logs:
+  persistence:
+    enabled: false
+
+scheduler:
+  extraVolumes:
+    - name: airflow-dags
+      configMap:
+        name: airflow-dags
+  extraVolumeMounts:
+    - name: airflow-dags
+      mountPath: /opt/airflow/dags/orders_pipeline.py
+      subPath: orders_pipeline.py
+      readOnly: true
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+
+dagProcessor:
+  extraVolumes:
+    - name: airflow-dags
+      configMap:
+        name: airflow-dags
+  extraVolumeMounts:
+    - name: airflow-dags
+      mountPath: /opt/airflow/dags/orders_pipeline.py
+      subPath: orders_pipeline.py
+      readOnly: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+apiServer:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+postgresql:
+  enabled: true
+  primary:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        memory: 512Mi
+
+migrateDatabaseJob:
+  useHelmHooks: false
+
+createUserJob:
+  useHelmHooks: false

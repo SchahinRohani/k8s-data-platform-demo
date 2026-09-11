@@ -112,7 +112,7 @@ install_secrets_stack() {
     --wait \
     --timeout 5m
 
-  kubectl apply -f "${SCRIPT_DIR}/deploy/secrets/vault.yaml"
+  kubectl apply -f "${SCRIPT_DIR}/deploy/k8s/secrets/vault.yaml"
 
   kubectl wait \
     --namespace vault \
@@ -153,7 +153,7 @@ install_coroot() {
     --wait \
     --timeout 10m
 
-  kubectl apply -f "${SCRIPT_DIR}/deploy/observability/coroot.yaml"
+  kubectl apply -f "${SCRIPT_DIR}/deploy/k8s/observability/coroot.yaml"
 }
 
 main() {
@@ -233,7 +233,7 @@ main() {
   install_secrets_stack
 
   log "Applying platform manifests"
-  kubectl apply -k "${SCRIPT_DIR}/deploy"
+  kubectl apply -k "${SCRIPT_DIR}/deploy/k8s/env/local"
 
   kubectl wait \
     --all-namespaces \

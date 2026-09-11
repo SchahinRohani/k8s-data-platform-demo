@@ -1,0 +1,37 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: airflow
+  namespace: airflow
+spec:
+  interval: 30m
+  timeout: 20m
+  releaseName: airflow
+
+  chart:
+    spec:
+      chart: airflow
+      version: "1.22.0"
+      sourceRef:
+        kind: HelmRepository
+        name: apache-airflow
+        namespace: flux-system
+      interval: 1h
+
+  valuesFrom:
+    - kind: ConfigMap
+      name: airflow-values
+      valuesKey: values.yaml
+
+  install:
+    strategy:
+      name: RetryOnFailure
+      retryInterval: 2m
+
+  upgrade:
+    strategy:
+      name: RetryOnFailure
+      retryInterval: 2m
+
+  driftDetection:
+    mode: enabled

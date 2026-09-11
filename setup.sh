@@ -14,8 +14,7 @@ KIND_NODE_IMAGE=${KIND_NODE_IMAGE:-"kindest/node:v1.37.0"}
 GATEWAY_API_VERSION=${GATEWAY_API_VERSION:-v1.6.2}
 CILIUM_VERSION=${CILIUM_VERSION:-1.20.1}
 FLUX_VERSION=${FLUX_VERSION:-v2.9.5}
-ESO_CHART_VERSION=${ESO_CHART_VERSION:-2.10.0}
-AIRFLOW_CHART_VERSION=${AIRFLOW_CHART_VERSION:-1.22.0}
+
 COROOT_OPERATOR_VERSION=${COROOT_OPERATOR_VERSION:-0.9.10}
 
 # Set RESET_CLUSTER=1 to replace an existing cluster.
@@ -31,7 +30,7 @@ INSTALL_COROOT=${INSTALL_COROOT:-0}
 readonly SCRIPT_DIR
 readonly CLUSTER_NAME KIND_CONFIG
 readonly KIND_NODE_IMAGE GATEWAY_API_VERSION CILIUM_VERSION FLUX_VERSION
-readonly ESO_CHART_VERSION AIRFLOW_CHART_VERSION COROOT_OPERATOR_VERSION
+readonly COROOT_OPERATOR_VERSION
 readonly RESET_CLUSTER RUN_CONNECTIVITY_TEST INSTALL_COROOT
 
 log() {
@@ -100,44 +99,6 @@ install_cilium() {
     --timeout 10m
 }
 
-install_secrets_stack() {
-  helm \
-    upgrade \
-    --install \
-    external-secrets \
-    oci://ghcr.io/external-secrets/charts/external-secrets \
-    --version "$ESO_CHART_VERSION" \
-    --namespace external-secrets \
-    --create-namespace \
-    --wait \
-    --timeout 5m
-
-  kubectl apply -f "${SCRIPT_DIR}/deploy/k8s/secrets/vault.yaml"
-
-  kubectl wait \
-    --namespace vault \
-    --for=condition=complete \
-    job/vault-bootstrap \
-    --timeout=180s
-}
-
-install_airflow() {
-  helm repo add apache-airflow https://airflow.apache.org >/dev/null
-  helm repo update apache-airflow >/dev/null
-
-  helm \
-    upgrade \
-    --install \
-    airflow \
-    apache-airflow/airflow \
-    --version "$AIRFLOW_CHART_VERSION" \
-    --namespace airflow \
-    --create-namespace \
-    --values "${SCRIPT_DIR}/configs/airflow.yaml" \
-    --wait \
-    --timeout 15m
-}
-
 install_coroot() {
   helm repo add coroot https://coroot.github.io/helm-charts >/dev/null
   helm repo update coroot >/dev/null
@@ -154,6 +115,34 @@ install_coroot() {
     --timeout 10m
 
   kubectl apply -f "${SCRIPT_DIR}/deploy/k8s/observability/coroot.yaml"
+}
+
+reconcile_platform() {
+  log "Connecting cluster to GitOps repository"
+  kubectl apply -k "${SCRIPT_DIR}/deploy/clusters/local"
+
+  log "Reconciling Helm releases through Flux"
+  flux reconcile kustomization platform-helm-local \
+    --namespace flux-system \
+    --with-source \
+    --timeout=30m
+
+  kubectl wait \
+    --namespace flux-system \
+    --for=condition=Ready \
+    kustomization/platform-helm-local \
+    --timeout=30m
+
+  log "Reconciling platform resources through Flux"
+  flux reconcile kustomization platform-local \
+    --namespace flux-system \
+    --timeout=20m
+
+  kubectl wait \
+    --namespace flux-system \
+    --for=condition=Ready \
+    kustomization/platform-local \
+    --timeout=20m
 }
 
 main() {
@@ -229,21 +218,16 @@ main() {
 
   flux check
 
-  log "Installing External Secrets ${ESO_CHART_VERSION} and Vault"
-  install_secrets_stack
+  log "Reconciling complete platform through Flux"
+  reconcile_platform
 
-  log "Applying platform manifests"
-  kubectl apply -k "${SCRIPT_DIR}/deploy/k8s/env/local"
-
+  log "Validating Flux Helm releases"
   kubectl wait \
     --all-namespaces \
     --for=condition=Ready \
-    externalsecret \
+    helmrelease \
     --all \
-    --timeout=120s
-
-  log "Installing Airflow ${AIRFLOW_CHART_VERSION}"
-  install_airflow
+    --timeout=30m
 
   if [ "$INSTALL_COROOT" = "1" ]; then
     log "Installing Coroot ${COROOT_OPERATOR_VERSION}"
@@ -254,13 +238,21 @@ main() {
   kubectl get nodes -o wide
   kubectl get pods --all-namespaces
 
-  printf '\nVersions:\n'
-  printf '  Kubernetes node:  %s\n' "$KIND_NODE_IMAGE"
-  printf '  Gateway API:      %s\n' "$GATEWAY_API_VERSION"
-  printf '  Cilium:           %s\n' "$CILIUM_VERSION"
-  printf '  Flux:             %s\n' "$FLUX_VERSION"
-  printf '  External Secrets: %s\n' "$ESO_CHART_VERSION"
-  printf '  Airflow:          %s\n' "$AIRFLOW_CHART_VERSION"
+  printf '\nFlux sources:\n'
+  flux get sources all --all-namespaces
+
+  printf '\nFlux Helm releases:\n'
+  flux get helmreleases --all-namespaces
+
+  printf '\nFlux Kustomizations:\n'
+  flux get kustomizations --all-namespaces
+
+  printf '\nBootstrap versions:\n'
+  printf '  Kubernetes node: %s\n' "$KIND_NODE_IMAGE"
+  printf '  Gateway API:     %s\n' "$GATEWAY_API_VERSION"
+  printf '  Cilium:          %s\n' "$CILIUM_VERSION"
+  printf '  Flux:            %s\n' "$FLUX_VERSION"
+  printf '  Helm releases:   managed declaratively by Flux\n'
 
   printf '\nEndpoints (Cilium Gateway, port 8081):\n'
   printf '  http://airflow.localhost:8081\n'

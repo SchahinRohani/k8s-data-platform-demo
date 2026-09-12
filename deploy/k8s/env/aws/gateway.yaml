@@ -3,17 +3,35 @@ kind: Gateway
 metadata:
   name: aws-internet-facing
   namespace: gateway
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
 spec:
   gatewayClassName: cilium
+
   infrastructure:
     annotations:
       service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
       service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: instance
       service.beta.kubernetes.io/aws-load-balancer-type: external
+
   listeners:
     - name: http
+      hostname: "*.aws.scaliir.digital"
       protocol: HTTP
       port: 80
+      allowedRoutes:
+        namespaces:
+          from: All
+
+    - name: https
+      hostname: "*.aws.scaliir.digital"
+      protocol: HTTPS
+      port: 443
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: aws-scaliir-digital-tls
       allowedRoutes:
         namespaces:
           from: All

@@ -42,9 +42,29 @@ metadata:
 spec:
   parentRefs:
     - name: aws-internet-facing
+      sectionName: https
   hostnames:
     - echo.aws.scaliir.digital
   rules:
     - backendRefs:
         - name: echo
           port: 80
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: echo-http-redirect
+  namespace: gateway
+spec:
+  parentRefs:
+    - name: aws-internet-facing
+      sectionName: http
+  hostnames:
+    - echo.aws.scaliir.digital
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 308
+

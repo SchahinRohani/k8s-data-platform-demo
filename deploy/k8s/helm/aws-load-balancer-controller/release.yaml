@@ -30,7 +30,8 @@ spec:
   values:
     clusterName: data-platform-demo
     region: eu-central-1
-    vpcId: vpc-0c7927134e7957830
+    vpcTags:
+      kubernetes.io/cluster/data-platform-demo: shared
     serviceAccount:
       create: true
       name: aws-load-balancer-controller

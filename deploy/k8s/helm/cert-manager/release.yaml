@@ -1,0 +1,43 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: cert-manager
+  namespace: cert-manager
+spec:
+  interval: 30m
+  timeout: 10m
+  releaseName: cert-manager
+
+  chart:
+    spec:
+      chart: cert-manager
+      version: "v1.19.1"
+      sourceRef:
+        kind: HelmRepository
+        name: jetstack
+        namespace: flux-system
+
+  install:
+    createNamespace: true
+    strategy:
+      name: RetryOnFailure
+      retryInterval: 1m
+
+  upgrade:
+    strategy:
+      name: RetryOnFailure
+      retryInterval: 1m
+
+  values:
+    crds:
+      enabled: true
+    config:
+      gatewayAPI:
+        enabled: true
+    serviceAccount:
+      create: true
+      name: cert-manager
+      annotations:
+        eks.amazonaws.com/role-arn: arn:aws:iam::121583281500:role/data-platform-demo-cert-manager
+    securityContext:
+      fsGroup: 1001

@@ -4,5 +4,6 @@ resources:
   - namespace.yaml
   - ../../helm/aws-load-balancer-controller
   - ../../helm/external-dns
+  - ../../helm/cert-manager
   - gateway.yaml
   - echo-route.yaml

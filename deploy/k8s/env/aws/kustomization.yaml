@@ -3,5 +3,6 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - ../../helm/aws-load-balancer-controller
+  - ../../helm/external-dns
   - gateway.yaml
   - echo-route.yaml

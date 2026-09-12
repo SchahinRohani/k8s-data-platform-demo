@@ -1,0 +1,46 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: external-dns
+  namespace: kube-system
+spec:
+  interval: 30m
+  timeout: 10m
+  releaseName: external-dns
+
+  chart:
+    spec:
+      chart: external-dns
+      version: "1.20.0"
+      sourceRef:
+        kind: HelmRepository
+        name: external-dns
+        namespace: flux-system
+
+  install:
+    strategy:
+      name: RetryOnFailure
+      retryInterval: 1m
+
+  upgrade:
+    strategy:
+      name: RetryOnFailure
+      retryInterval: 1m
+
+  values:
+    provider:
+      name: aws
+    env:
+      - name: AWS_DEFAULT_REGION
+        value: eu-central-1
+    sources:
+      - gateway-httproute
+    domainFilters:
+      - aws.scaliir.digital
+    txtOwnerId: data-platform-demo
+    policy: sync
+    serviceAccount:
+      create: true
+      name: external-dns
+      annotations:
+        eks.amazonaws.com/role-arn: arn:aws:iam::121583281500:role/data-platform-demo-external-dns

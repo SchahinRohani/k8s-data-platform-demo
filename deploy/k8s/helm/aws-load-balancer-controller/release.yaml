@@ -1,0 +1,38 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: aws-load-balancer-controller
+  namespace: kube-system
+spec:
+  interval: 30m
+  timeout: 10m
+  releaseName: aws-load-balancer-controller
+
+  chart:
+    spec:
+      chart: aws-load-balancer-controller
+      version: "3.5.0"
+      sourceRef:
+        kind: HelmRepository
+        name: aws-load-balancer-controller
+        namespace: flux-system
+
+  install:
+    strategy:
+      name: RetryOnFailure
+      retryInterval: 1m
+
+  upgrade:
+    strategy:
+      name: RetryOnFailure
+      retryInterval: 1m
+
+  values:
+    clusterName: data-platform-demo
+    region: eu-central-1
+    vpcId: vpc-0c7927134e7957830
+    serviceAccount:
+      create: true
+      name: aws-load-balancer-controller
+      annotations:
+        eks.amazonaws.com/role-arn: arn:aws:iam::121583281500:role/DataPlatformAwsLoadBalancerController

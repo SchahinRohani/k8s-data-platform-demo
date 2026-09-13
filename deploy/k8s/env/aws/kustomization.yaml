@@ -7,6 +7,7 @@ resources:
   - ../../helm/cert-manager
   - ../../helm/external-secrets
   - ../../helm/vault
+  - ../../helm/coroot
   - secrets
   - storageclass.yaml
   - gateway.yaml

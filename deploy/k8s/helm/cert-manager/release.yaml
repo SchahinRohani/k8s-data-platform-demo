@@ -8,6 +8,10 @@ spec:
   timeout: 10m
   releaseName: cert-manager
 
+  dependsOn:
+    - name: aws-load-balancer-controller
+      namespace: kube-system
+
   chart:
     spec:
       chart: cert-manager
@@ -31,12 +35,15 @@ spec:
   values:
     crds:
       enabled: true
+
     config:
       apiVersion: controller.config.cert-manager.io/v1alpha1
       kind: ControllerConfiguration
       enableGatewayAPI: true
+
     serviceAccount:
       create: true
       name: cert-manager
+
     securityContext:
       fsGroup: 1001

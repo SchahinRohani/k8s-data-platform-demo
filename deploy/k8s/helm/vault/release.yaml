@@ -1,0 +1,106 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: vault
+  namespace: vault
+spec:
+  interval: 30m
+  timeout: 10m
+  releaseName: vault
+
+  chart:
+    spec:
+      chart: vault
+      version: "0.34.1"
+      sourceRef:
+        kind: HelmRepository
+        name: hashicorp
+        namespace: flux-system
+
+  install:
+    createNamespace: true
+    strategy:
+      name: RetryOnFailure
+      retryInterval: 1m
+
+  upgrade:
+    strategy:
+      name: RetryOnFailure
+      retryInterval: 1m
+
+  values:
+    injector:
+      enabled: false
+
+    csi:
+      enabled: false
+
+    ui:
+      enabled: true
+      serviceType: ClusterIP
+
+    server:
+      image:
+        repository: hashicorp/vault
+        tag: "1.20.4"
+
+      serviceAccount:
+        create: true
+        name: vault
+
+      dataStorage:
+        enabled: true
+        size: 10Gi
+        storageClass: gp3-retain
+        accessMode: ReadWriteOnce
+
+      auditStorage:
+        enabled: false
+
+      standalone:
+        enabled: false
+
+      readinessProbe:
+        enabled: true
+        path: /v1/sys/health?standbyok=true&sealedcode=204&uninitcode=204
+
+      livenessProbe:
+        enabled: true
+        path: /v1/sys/health?standbyok=true&sealedcode=204&uninitcode=204
+        initialDelaySeconds: 60
+
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          memory: 512Mi
+
+      ha:
+        enabled: true
+        replicas: 1
+
+        raft:
+          enabled: true
+          setNodeId: true
+
+          config: |
+            ui = true
+            disable_mlock = true
+
+            listener "tcp" {
+              address         = "[::]:8200"
+              cluster_address = "[::]:8201"
+              tls_disable     = 1
+            }
+
+            storage "raft" {
+              path = "/vault/data"
+            }
+
+            seal "awskms" {
+              region     = "eu-central-1"
+              kms_key_id = "alias/data-platform-demo-vault"
+            }
+
+            service_registration "kubernetes" {}

@@ -5,6 +5,8 @@ resources:
   - ../../helm/aws-load-balancer-controller
   - ../../helm/external-dns
   - ../../helm/cert-manager
+  - ../../helm/external-secrets
+  - ../../helm/vault
   - storageclass.yaml
   - gateway.yaml
   - echo-route.yaml

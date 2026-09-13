@@ -32,8 +32,9 @@ spec:
     crds:
       enabled: true
     config:
-      gatewayAPI:
-        enabled: true
+      apiVersion: controller.config.cert-manager.io/v1alpha1
+      kind: ControllerConfiguration
+      enableGatewayAPI: true
     serviceAccount:
       create: true
       name: cert-manager

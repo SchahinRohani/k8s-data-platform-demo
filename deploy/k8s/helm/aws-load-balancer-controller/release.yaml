@@ -35,5 +35,3 @@ spec:
     serviceAccount:
       create: true
       name: aws-load-balancer-controller
-      annotations:
-        eks.amazonaws.com/role-arn: arn:aws:iam::121583281500:role/DataPlatformAwsLoadBalancerController

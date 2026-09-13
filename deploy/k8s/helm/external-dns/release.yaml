@@ -42,5 +42,3 @@ spec:
     serviceAccount:
       create: true
       name: external-dns
-      annotations:
-        eks.amazonaws.com/role-arn: arn:aws:iam::121583281500:role/data-platform-demo-external-dns

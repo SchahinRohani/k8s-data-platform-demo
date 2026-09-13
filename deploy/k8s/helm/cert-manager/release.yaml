@@ -37,7 +37,5 @@ spec:
     serviceAccount:
       create: true
       name: cert-manager
-      annotations:
-        eks.amazonaws.com/role-arn: arn:aws:iam::121583281500:role/data-platform-demo-cert-manager
     securityContext:
       fsGroup: 1001

@@ -6,3 +6,4 @@ resources:
   - repository.yaml
   - rbac.yaml
   - release.yaml
+  - route.yaml

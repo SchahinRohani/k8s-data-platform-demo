@@ -38,6 +38,9 @@ spec:
     ui:
       enabled: true
       serviceType: ClusterIP
+      activeVaultPodOnly: true
+      externalPort: 8200
+      targetPort: 8200
 
     server:
       image:

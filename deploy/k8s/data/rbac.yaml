@@ -39,27 +39,3 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: airflow-pod-operator
----
-apiVersion: external-secrets.io/v1
-kind: ExternalSecret
-metadata:
-  name: pipeline-s3
-  namespace: data
-spec:
-  refreshInterval: 1h
-  secretStoreRef:
-    kind: ClusterSecretStore
-    name: vault
-  target:
-    name: pipeline-s3
-    creationPolicy: Owner
-    template:
-      data:
-        AWS_ACCESS_KEY_ID: "{{ .access_key }}"
-        AWS_SECRET_ACCESS_KEY: "{{ .secret_key }}"
-        AWS_DEFAULT_REGION: us-east-1
-        AWS_EC2_METADATA_DISABLED: "true"
-        S3_ENDPOINT: http://rustfs.storage.svc.cluster.local:9000
-  dataFrom:
-    - extract:
-        key: rustfs

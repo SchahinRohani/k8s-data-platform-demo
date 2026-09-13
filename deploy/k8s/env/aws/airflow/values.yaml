@@ -1,0 +1,35 @@
+env:
+  - name: PIPELINE_IMAGE
+    value: 121583281500.dkr.ecr.eu-central-1.amazonaws.com/data-platform-demo/pipeline:dev-20260913170014
+
+fernetKeySecretName: airflow-secrets
+apiSecretKeySecretName: airflow-secrets
+jwtSecretName: airflow-secrets
+
+data:
+  metadataSecretName: airflow-metadata
+  resultBackendSecretName: airflow-metadata
+
+createUserJob:
+  defaultUser:
+    username: admin
+    email: admin@scaliir.digital
+    firstName: Platform
+    lastName: Admin
+
+postgresql:
+  auth:
+    enablePostgresUser: true
+    username: airflow
+    database: airflow
+    existingSecret: airflow-postgresql
+    secretKeys:
+      adminPasswordKey: postgres-password
+      userPasswordKey: password
+      replicationPasswordKey: replication-password
+
+  primary:
+    persistence:
+      enabled: true
+      storageClass: gp3-retain
+      size: 8Gi

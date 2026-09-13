@@ -12,3 +12,6 @@ resources:
   - storageclass.yaml
   - gateway.yaml
   - echo-route.yaml
+  - ../../data
+  - pipeline-config.yaml
+  - airflow

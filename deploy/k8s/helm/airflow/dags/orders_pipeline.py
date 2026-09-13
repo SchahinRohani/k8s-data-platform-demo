@@ -1,15 +1,29 @@
 from __future__ import annotations
 
+import os
 from datetime import datetime, timedelta, timezone
 
 from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
 from airflow.sdk import DAG
 from kubernetes.client import models as k8s
 
+PIPELINE_IMAGE = os.getenv(
+    "PIPELINE_IMAGE",
+    "demo-data-pipeline:dev",
+)
 
-S3_ENV_FROM = [
+PIPELINE_ENV_FROM = [
     k8s.V1EnvFromSource(
-        secret_ref=k8s.V1SecretEnvSource(name="pipeline-s3"),
+        config_map_ref=k8s.V1ConfigMapEnvSource(
+            name="pipeline-config",
+            optional=True,
+        ),
+    ),
+    k8s.V1EnvFromSource(
+        secret_ref=k8s.V1SecretEnvSource(
+            name="pipeline-s3",
+            optional=True,
+        ),
     ),
 ]
 
@@ -55,10 +69,10 @@ with DAG(
         task_id="seed",
         name="pipeline-seed",
         namespace="data",
-        image="demo-data-pipeline:dev",
+        image=PIPELINE_IMAGE,
         image_pull_policy="IfNotPresent",
         arguments=["seed"],
-        env_from=S3_ENV_FROM,
+        env_from=PIPELINE_ENV_FROM,
         service_account_name="pipeline-runner",
         volumes=[TEMP_VOLUME],
         volume_mounts=[TEMP_VOLUME_MOUNT],
@@ -79,10 +93,10 @@ with DAG(
         task_id="transform",
         name="pipeline-transform",
         namespace="data",
-        image="demo-data-pipeline:dev",
+        image=PIPELINE_IMAGE,
         image_pull_policy="IfNotPresent",
         arguments=["transform"],
-        env_from=S3_ENV_FROM,
+        env_from=PIPELINE_ENV_FROM,
         env_vars=[k8s.V1EnvVar(name="INPUT_WAIT_SECONDS", value="120")],
         service_account_name="pipeline-runner",
         volumes=[TEMP_VOLUME],

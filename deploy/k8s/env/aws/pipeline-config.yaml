@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pipeline-config
+  namespace: data
+data:
+  PIPELINE_BACKEND: athena
+  AWS_REGION: eu-central-1
+
+  RAW_BUCKET: data-platform-demo-applications-121583281500-eu-central-1
+  PROCESSED_BUCKET: data-platform-demo-applications-121583281500-eu-central-1
+
+  RAW_KEY: raw/orders/orders.csv
+  PROCESSED_PREFIX: processed/orders_by_country/
+
+  ATHENA_DATABASE: data_platform_demo
+  ATHENA_WORKGROUP: data-platform-demo
+  ATHENA_RAW_TABLE: orders_raw
+  ATHENA_QUERY_TIMEOUT_SECONDS: "300"
+  INPUT_WAIT_SECONDS: "120"

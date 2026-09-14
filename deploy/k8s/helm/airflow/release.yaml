@@ -35,3 +35,19 @@ spec:
 
   driftDetection:
     mode: enabled
+    ignore:
+      - paths:
+          - ""
+        target:
+          version: v1
+          kind: Job
+          namespace: airflow
+          name: airflow-create-user
+
+      - paths:
+          - ""
+        target:
+          version: v1
+          kind: Job
+          namespace: airflow
+          name: airflow-run-airflow-migrations
